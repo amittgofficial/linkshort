@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🔗 Link Formatter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #101010;
+      color: #fff;
+      padding: 20px;
+    }
+    .nav {
+      margin-bottom: 20px;
+    }
+    .nav button {
+      background: linear-gradient(135deg, #0a84ff, #0061ff);
+      border: none;
+      color: white;
+      font-size: 1em;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-right: 10px;
+    }
+    .nav button:hover { transform: scale(1.05); }
+    textarea {
+      width: 100%;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #222;
+      color: #fff;
+      resize: vertical;
+      font-size: 1.05em;
+      min-height: 160px; /* placeholder bada */
+    }
+    button.action {
+      margin-top: 10px;
+      width: 100%;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: white;
+      font-size: 1em;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.action:hover {
+      background: linear-gradient(135deg, #1cb5e0, #000851);
+    }
+    .output {
+      margin-top: 20px;
+      background: #1c1c1c;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    pre {
+      background: #111;
+      padding: 15px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      color: #0af;
+      font-size: 1em;
+    }
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #000;
+      padding: 15px 25px;
+      color: #0f0;
+      border-radius: 12px;
+      display: none;
+      font-size: 1.1em;
+      box-shadow: 0 0 12px rgba(0,255,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <button onclick="location.href='index.html'">⬅️ Back</button>
+</div>
+
+<h2>🔗 Link Tool</h2>
+<textarea id="serials" placeholder="Paste full content with date + serial lines..."></textarea>
+<textarea id="links" placeholder="Paste links (one per line, use 'deleted' where needed)..."></textarea>
+<button class="action" onclick="adjustLinks()">✅ Submit</button>
+
+<div class="output" id="outputSection" style="display:none;">
+  <h3>Formatted Output</h3>
+  <pre id="output"></pre>
+  <button class="action" onclick="copyOutput()">📋 Copy Output</button>
+</div>
+
+<div id="toast" class="toast">Copied!</div>
+
+<script>
+function showToast(msg, color = "#0f0") {
+  const toast = document.getElementById('toast');
+  toast.innerText = msg;
+  toast.style.color = color;
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 2500);
+}
+
+function adjustLinks() {
+  const serialInput = document.getElementById("serials").value.trim().split("\n").filter(Boolean);
+  const links = document.getElementById("links").value.trim().split("\n").filter(Boolean);
+
+  let output = "";
+  let linkIndex = 0;
+  let startProcessing = false;
+
+  for (let i = 0; i < serialInput.length; i++) {
+      const line = serialInput[i].trim();
+
+      if (!startProcessing) {
+          output += line + "\n\n";
+          if (line.startsWith("****")) startProcessing = true;
+          continue;
+      }
+
+      const firstColMatch = line.match(/^(\d+)\./);
+      if (firstColMatch) {
+          const serial = firstColMatch[1];
+          let link = links[linkIndex] ? links[linkIndex].trim() : "";
+          while (link === "") {
+              linkIndex++;
+              link = links[linkIndex] ? links[linkIndex].trim() : "";
+          }
+
+          const formattedLink = link.toLowerCase().includes("delete") ? "deleted" : link;
+          output += `${serial} ${formattedLink}\n\n`;
+          linkIndex++;
+      }
+  }
+
+  document.getElementById("output").innerText = output.trim();
+  document.getElementById("outputSection").style.display = "block";
+  showToast("Formatted Successfully ✅");
+}
+
+function copyOutput() {
+  const text = document.getElementById("output").innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast("Copied to Clipboard 📋");
+  });
+}
+</script>
+</body>
+</html>
