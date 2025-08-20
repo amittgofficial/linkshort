@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>🔗 Link Formatter</title>
+  <title>Munna Bhaiya</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -38,7 +38,7 @@
       color: #fff;
       resize: vertical;
       font-size: 1.05em;
-      min-height: 160px; /* placeholder bada */
+      min-height: 160px;
     }
     button.action {
       margin-top: 10px;
@@ -69,6 +69,15 @@
       color: #0af;
       font-size: 1em;
     }
+    .summary {
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #181818;
+      color: #0f0;
+      font-size: 0.95em;
+      line-height: 1.5em;
+    }
     .toast {
       position: fixed;
       top: 50%;
@@ -86,19 +95,23 @@
 </head>
 <body>
 
-<div class="nav">
-  <button onclick="location.href='index.html'">⬅️ Back</button>
-</div>
 
-<h2>🔗 Link Tool</h2>
-<textarea id="serials" placeholder="Paste full content with date + serial lines..."></textarea>
-<textarea id="links" placeholder="Paste links (one per line, use 'deleted' where needed)..."></textarea>
+Code List
+<textarea id="serials" placeholder="Paste Here..."></textarea>
+Link list
+<textarea id="links" placeholder="Past Here ..."></textarea>
 <button class="action" onclick="adjustLinks()">✅ Submit</button>
 
+<div class="nav">
+  <button onclick="location.href='index.html'">Clear</button>
+</div>
+
 <div class="output" id="outputSection" style="display:none;">
+  <div id="summary" class="summary"></div>
+  <button class="action" onclick="copyOutput()">📋 Copy</button>
   <h3>Formatted Output</h3>
   <pre id="output"></pre>
-  <button class="action" onclick="copyOutput()">📋 Copy Output</button>
+
 </div>
 
 <div id="toast" class="toast">Copied!</div>
@@ -117,8 +130,14 @@ function adjustLinks() {
   const links = document.getElementById("links").value.trim().split("\n").filter(Boolean);
 
   let output = "";
-  let linkIndex = 0;
   let startProcessing = false;
+
+  let serialCount = 0;
+  let serialDeleted = 0;
+  let linkCount = links.length;
+  let linkDeleted = links.filter(l => l.toLowerCase().includes("delete")).length;
+
+  let linkIndex = 0;
 
   for (let i = 0; i < serialInput.length; i++) {
       const line = serialInput[i].trim();
@@ -131,30 +150,58 @@ function adjustLinks() {
 
       const firstColMatch = line.match(/^(\d+)\./);
       if (firstColMatch) {
-          const serial = firstColMatch[1];
-          let link = links[linkIndex] ? links[linkIndex].trim() : "";
-          while (link === "") {
-              linkIndex++;
-              link = links[linkIndex] ? links[linkIndex].trim() : "";
+          serialCount++;
+
+          // agar link khatam ho gaya
+          if (linkIndex >= linkCount) {
+              output += `${firstColMatch[1]} same not detected\n\n`;
+              continue;
           }
 
-          const formattedLink = link.toLowerCase().includes("delete") ? "deleted" : link;
+          const serial = firstColMatch[1];
+          const link = links[linkIndex].trim();
+          const isDeleted = link.toLowerCase().includes("delete");
+
+          if (isDeleted) serialDeleted++;
+
+          const formattedLink = isDeleted ? "deleted" : link;
           output += `${serial} ${formattedLink}\n\n`;
           linkIndex++;
       }
   }
 
+  // agar link extra bache ho
+  if (linkIndex < linkCount) {
+      output += `\n⚠️ Extra links left unmatched (${linkCount - linkIndex})\n`;
+  }
+
+  // Summary text
+  let summaryText = `
+Total Serials: ${serialCount} (Deleted: ${serialDeleted})
+Total Links: ${linkCount} (Deleted: ${linkDeleted})
+  `.trim();
+
+  // check agar same nahi hai
+  if (serialCount !== linkCount) {
+      summaryText += `\n\n Wrong ❌`;
+  } else {
+      summaryText += `\n\n Perfect ✅`;
+  }
+
+  document.getElementById("summary").innerText = summaryText;
   document.getElementById("output").innerText = output.trim();
   document.getElementById("outputSection").style.display = "block";
-  showToast("Formatted Successfully ✅");
+  showToast("Successfully ✅");
 }
 
 function copyOutput() {
   const text = document.getElementById("output").innerText;
   navigator.clipboard.writeText(text).then(() => {
-    showToast("Copied to Clipboard 📋");
+    showToast("Copied");
   });
 }
+</script>
+
 </script>
 </body>
 </html>
